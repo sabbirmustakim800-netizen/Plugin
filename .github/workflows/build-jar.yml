@@ -30,16 +30,15 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
 
-    # ৪. জিপের ভেতরের libs/ ফোল্ডার থেকে সব JAR ফাইল নিয়ে সরাসরি কম্পাইল করা (কোনো ডাউনলোডের ঝামেলা নেই)
+    # ৪. libs/ ফোল্ডারের ভেতরের সব জার ফাইলকে একসাথে ক্লাসপাথে যুক্ত করে কম্পাইল করা
+    # এখানে 'project_files/libs/*' ব্যবহার করায় ফোল্ডারের সব JAR ফাইল অটোমেটিক লোড হবে
     - name: Compile Java Sources
       run: |
         mkdir -p bin/
         find project_files/src -name "*.java" > sources.txt
-        
-        # জিপের ভেতরের ৩টি লোকাল জার ফাইল কানেক্ট করা হলো
-        javac -d bin/ -cp "project_files/libs/spigot-api.jar:project_files/libs/floodgate-api.jar:project_files/libs/cumulus.jar" @sources.txt
+        javac -d bin/ -cp "project_files/libs/*" @sources.txt
 
-    # ৫. plugin.yml, config.yml সহ সব রিসোর্স একসাথে করে JAR বানানো
+    # ۵. plugin.yml, config.yml সহ সব রিসোর্স একসাথে করে JAR বানানো
     - name: Create Final JAR File
       run: |
         if [ -f "project_files/plugin.yml" ]; then cp project_files/plugin.yml bin/; fi
