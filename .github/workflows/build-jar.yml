@@ -15,7 +15,7 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    # ২. জিপ ফাইলটি 'project_files' ফোল্ডারে আনজিপ করা
+    # ২. জিপ ফইলটি 'project_files' ফোল্ডারে আনজিপ করা
     - name: Unzip TrafficConnect.zip
       run: |
         unzip TrafficConnect.zip -d project_files/
