@@ -1,0 +1,39 @@
+name: Build TrafficConnect JAR (Gradle)
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # ১. কোড চেকআউট করা
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    # ২. জাভা ২১ সেটআপ করা
+    - name: Set up JDK 21
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+        cache: gradle
+
+    # ৩. Gradle Wrapper কে এক্সিকিউট করার পারমিশন দেওয়া
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    # ৪. গ্রেডল দিয়ে .jar ফাইল বিল্ড করা
+    - name: Build with Gradle
+      run: ./gradlew build
+
+    # ৫. তৈরি হওয়া JAR ফাইলটি Artifact হিসেবে আপলোড করা
+    - name: Upload TrafficConnect JAR
+      uses: actions/upload-artifact@v4
+      with:
+        name: TrafficConnect-Plugin
+        path: build/libs/*.jar # গ্রেডলের ফাইনাল জার ফাইল সাধারণত 'build/libs' ফোল্ডারে থাকে
