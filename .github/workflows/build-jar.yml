@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # ১. গিটহাব রিপোজিটরি থেকে কোড নেওয়া
+    # ১. গিটহাব রিপোজিটরি থেকে ফাইল চেকআউট করা
     - name: Checkout Repository
       uses: actions/checkout@v4
 
@@ -21,6 +21,7 @@ jobs:
         unzip TrafficConnect.zip -d project_files/
         cd project_files/
         ls -la
+        if [ -d "libs" ]; then ls -la libs/; fi
 
     # ৩. জাভা ২১ সেটআপ করা
     - name: Set up JDK 21
@@ -29,27 +30,16 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
 
-    # ৪. প্রোজেক্টের জন্য সব প্রয়োজনীয় JAR লাইব্রেরি ডাউনলোড করা (যা গিটহাব ব্লক করবে না)
-    - name: Download All Dependencies (Spigot, Floodgate, Geyser)
-      run: |
-        mkdir -p lib/
-        # Spigot API
-        curl -L -o lib/spigot-api.jar "https://repo.maven.apache.org/maven2/org/spigotmc/spigot-api/1.20.4-R0.1-SNAPSHOT/spigot-api-1.20.4-R0.1-20231208.012543-16.jar"
-        # Floodgate API
-        curl -L -o lib/floodgate-api.jar "https://repo.opencollab.dev/maven-snapshots/org/geysermc/floodgate/api/2.2.3-SNAPSHOT/api-2.2.3-20240222.091316-14.jar"
-        # Geyser Cumulus (Form API)
-        curl -L -o lib/cumulus.jar "https://repo.opencollab.dev/maven-snapshots/org/geysermc/cumulus/cumulus/1.1.2-SNAPSHOT/cumulus-1.1.2-20230811.213702-6.jar"
-
-    # ৫. সব লাইব্রেরি একসাথে যুক্ত করে জাভা ফাইলগুলো কম্পাইল করা
+    # ৪. জিপের ভেতরের libs/ ফোল্ডার থেকে সব JAR ফাইল নিয়ে সরাসরি কম্পাইল করা (কোনো ডাউনলোডের ঝামেলা নেই)
     - name: Compile Java Sources
       run: |
         mkdir -p bin/
         find project_files/src -name "*.java" > sources.txt
         
-        # সব কটি ডাউনলোড করা জার ক্লাসের পাথে (Classpath) যুক্ত করা হলো
-        javac -d bin/ -cp "lib/spigot-api.jar:lib/floodgate-api.jar:lib/cumulus.jar" @sources.txt
+        # জিপের ভেতরের ৩টি লোকাল জার ফাইল কানেক্ট করা হলো
+        javac -d bin/ -cp "project_files/libs/spigot-api.jar:project_files/libs/floodgate-api.jar:project_files/libs/cumulus.jar" @sources.txt
 
-    # ৬. plugin.yml, config.yml সহ সব রিসোর্স ফোল্ডার একসাথে করে ফাইনাল JAR তৈরি
+    # ৫. plugin.yml, config.yml সহ সব রিসোর্স একসাথে করে JAR বানানো
     - name: Create Final JAR File
       run: |
         if [ -f "project_files/plugin.yml" ]; then cp project_files/plugin.yml bin/; fi
@@ -60,7 +50,7 @@ jobs:
         cd ..
         ls -la TrafficConnect.jar
 
-    # ৭. তৈরি হওয়া সফল জার ফাইলটি ডাউনলোড করার জন্য আপলোড করা
+    # ৬. ফাইনাল সফল জার ফাইলটি ডাউনলোড করার জন্য রেডি করা
     - name: Upload TrafficConnect JAR
       uses: actions/upload-artifact@v4
       with:
