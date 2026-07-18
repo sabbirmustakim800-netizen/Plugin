@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # ১. গিটহাব রিপোজিটরি থেকে TrafficConnect.zip নেওয়া
+    # ১. গিটহাব রিপোজিটরি থেকে ফাইল চেকআউট করা
     - name: Checkout Repository
       uses: actions/checkout@v4
 
@@ -22,45 +22,39 @@ jobs:
         cd project_files/
         ls -la
 
-    # ৩. জাভা ২১ সেটআপ করা (Minecraft 1.21+ এর জন্য)
+    # ৩. জাভা ২১ সেটআপ করা
     - name: Set up JDK 21
       uses: actions/setup-java@v4
       with:
         java-version: '21'
         distribution: 'temurin'
 
-    # ৪. Spigot/Paper API (ডিপেন্ডেন্সি) ডাউনলোড করা, যা কোড কম্পাইল করতে লাগবে
+    # ৪. গিটহাবের নিরাপদ মাভেন সেন্ট্রাল থেকে Spigot API ডাউনলোড করা (এটি কখনো ব্লক হবে না)
     - name: Download Spigot API Dependency
       run: |
         mkdir -p lib/
-        curl -o lib/spigot-api.jar https://hub.spigotmc.org/nexus/content/repositories/snapshots/org/spigotmc/spigot-api/1.21-R0.1-SNAPSHOT/spigot-api-1.21-R0.1-20240624.225501-18.jar
+        curl -L -o lib/spigot-api.jar "https://repo.maven.apache.org/maven2/org/spigotmc/spigot-api/1.20.4-R0.1-SNAPSHOT/spigot-api-1.20.4-R0.1-20231208.012543-16.jar"
 
-    # ৫. ম্যানুয়ালি জাভা ফাইলগুলো কম্পাইল করা এবং ক্লাস ফাইল তৈরি করা
+    # ৫. জাভা ফাইলগুলো সঠিকভাবে কম্পাইল করা
     - name: Compile Java Sources
       run: |
         mkdir -p bin/
-        # src ফোল্ডারের ভেতরের সব .java ফাইল খুঁজে spigot-api কানেক্ট করে কম্পাইল করা
         find project_files/src -name "*.java" > sources.txt
         javac -d bin/ -cp lib/spigot-api.jar @sources.txt
 
-    # ৬. plugin.yml, config.yml এবং ক্লাস ফাইলগুলো একসাথে করে ফাইনাল JAR বানানো
+    # ৬. plugin.yml, config.yml সহ সব রিসোর্স একসাথে করে JAR বানানো
     - name: Create Final JAR File
       run: |
-        # plugin.yml এবং config.yml ফাইলগুলো bin ফোল্ডারে কপি করা (যাতে এগুলো জারের ভেতরে থাকে)
         if [ -f "project_files/plugin.yml" ]; then cp project_files/plugin.yml bin/; fi
         if [ -f "project_files/config.yml" ]; then cp project_files/config.yml bin/; fi
         
-        # bin ফোল্ডার থেকে TrafficConnect.jar তৈরি করা
         cd bin/
         jar cf ../TrafficConnect.jar .
         cd ..
-        
-        # ফাইল তৈরি হয়েছে কিনা চেক করা
-        ls -la TrafficConnect.jar
 
-    # ৭. তৈরি হওয়া ফাইনাল .jar ফাইলটি Artifact হিসেবে আপলোড করা
+    # ৭. ফাইনাল সফল জার ফাইলটি ডাউনলোড করার জন্য রেডি করা
     - name: Upload TrafficConnect JAR
       uses: actions/upload-artifact@v4
       with:
-        name: TrafficConnect-Manual-JAR
+        name: TrafficConnect-Success-JAR
         path: TrafficConnect.jar
